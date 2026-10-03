@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rutina de Gym Semanal</title>
+
+  <style>
+    /* ===== COLORES ===== */
+    :root {
+      --bg:   #f6f7f9;
+      --card: #ffffff;
+      --tx:   #1b1f27;
+      --mu:   #5d6675;
+      --ac:   #e8541e;
+      --bd:   #e3e6eb;
+      --sv:   #fdeee7;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:   #14171c;
+        --card: #1e232b;
+        --tx:   #eef0f4;
+        --mu:   #9aa3b2;
+        --ac:   #ff7a45;
+        --bd:   #2d343f;
+        --sv:   #2a2420;
+      }
+    }
+
+    /* ===== BASE ===== */
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+      background: var(--bg);
+      color: var(--tx);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+    }
+    header, .modes, nav, main { max-width: 820px; margin: auto; }
+    header { padding: 28px 16px 8px; }
+    h1 { margin: 0; font-size: 1.8rem; }
+    header p { margin: 4px 0 0; color: var(--mu); }
+    h2 { font-size: 1.25rem; margin: 18px 0 12px; }
+    main { padding: 0 16px 40px; }
+
+    /* ===== FONDO CON IMAGEN ===== */
+    :root {
+      --fondo-img: url("https://i.pinimg.com/736x/68/5c/cf/685ccffac1a57a471e8e326e88202cc4.jpg");
+      --fondo-size: cover;        /* cubre toda la pantalla sin repetirse */
+      --fondo-repeat: no-repeat;
+      --fondo-opacidad: .14;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --fondo-opacidad: .22; }
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100lvh;             /* celular: altura completa aunque la barra del navegador se oculte */
+      z-index: -1;
+      background-image: var(--fondo-img);
+      background-size: var(--fondo-size);
+      background-repeat: var(--fondo-repeat);
+      background-position: center;
+      opacity: var(--fondo-opacidad);
+      pointer-events: none;
+    }
+
+    /* ===== BOTONES ===== */
+
+    .modes { display: flex; gap: 8px; padding: 10px 16px 0; }
+    nav    { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; }
+    .modes button, nav button {
+      flex: 0 0 auto;
+      border: 1px solid var(--bd);
+      background: var(--card);
+      color: var(--tx);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: .9rem;
+      cursor: pointer;
+    }
+    .modes button.on, nav button.on {
+      background: var(--ac);
+      color: #fff;
+      border-color: var(--ac);
+    }
+    nav button.rest-day { opacity: .75; }
+
+    /* ===== NIVELES DE ENTRENAMIENTO ===== */
+    .levels { flex-wrap: wrap; }
+    .nivel-info { max-width: 820px; margin: 0 auto; padding: 10px 16px 0; }
+    .nivel-card {
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-left: 4px solid var(--ac);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .nivel-card h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    .nivel-card h3 small { font-weight: 400; font-size: .82rem; color: var(--mu); }
+    .nivel-card p { margin: 4px 0; font-size: .9rem; color: var(--mu); }
+    .nivel-card b { color: var(--tx); }
+
+    /* ===== TARJETA DE EJERCICIO ===== */
+    .ex {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .pic svg, .pic img {
+      width: 170px;
+      height: 140px;
+      border-radius: 10px;
+      display: block;
+    }
+    .pic svg { background: var(--sv); color: var(--ac); }
+    .pic img { object-fit: cover; }
+
+    .ex h3 { margin: 0 0 4px; font-size: 1.05rem; }
+    .ex p  { margin: 4px 0; font-size: .92rem; color: var(--mu); }
+    .ex b  { color: var(--tx); }
+    .ex ol { margin: 4px 0 0; padding-left: 18px; font-size: .9rem; color: var(--mu); }
+    .tag {
+      display: inline-block;
+      background: var(--sv);
+      color: var(--ac);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin: 0 6px 6px 0;
+    }
+
+    /* ===== DÍA DE DESCANSO ===== */
+    .rest {
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 18px;
+    }
+    .rest-hero {
+      height: 190px;
+      background: linear-gradient(135deg, #1f2a44, #3b2f63 60%, var(--ac));
+    }
+    .rest-hero svg, .rest-hero img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+    .rest-body { padding: 22px 20px 24px; text-align: center; }
+    .rest-body h3 { margin: 0 0 6px; font-size: 1.35rem; }
+    .rest-body > p { margin: 0; color: var(--mu); }
+    .rest-tips {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+      text-align: left;
+    }
+    .tip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--sv);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .tip .ic { font-size: 1.6rem; }
+    .tip b    { display: block; font-size: .92rem; }
+    .tip span { font-size: .8rem; color: var(--mu); }
+
+    /* ===== PC / TABLET ANCHO: tarjetas en 2 columnas ===== */
+    @media (min-width: 1000px) {
+      header, .modes, nav, main, .nivel-info { max-width: 1100px; }
+      main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 16px;
+        align-items: start;
+      }
+      main > h2, main > .rest { grid-column: 1 / -1; }
+    }
+
+    /* ===== CELULAR EN HORIZONTAL (poca altura) ===== */
+    @media (max-height: 480px) and (orientation: landscape) {
+      header { padding-top: 12px; }
+      h1 { font-size: 1.4rem; }
+      .rest-hero { height: 120px; }
+    }
+
+    /* ===== MÓVIL ===== */
+    @media (max-width: 560px) {
+      .ex { grid-template-columns: 1fr; }
+      .pic svg, .pic img { width: 100%; }
+      .rest-tips { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🏋️ Rutina de Gym Semanal</h1>
+    <p>Gym: Lun · Mié · Vie · Sáb. Descanso: Mar · Jue · Dom.</p>
+  </header>
+
+  <div class="modes">
+    <button id="btnDia" class="on">Por día</button>
+    <button id="btnSemana">Semana completa</button>
+  </div>
+  <div class="modes levels" id="levels" aria-label="Nivel de entrenamiento"></div>
+  <section class="nivel-info" id="nivelInfo"></section>
+  <nav id="nav"></nav>
+  <main id="main"></main>
+
+  <script>
+    /* =====================================================
+       1) DIBUJOS DE RESPALDO (si un ejercicio no tiene
+          imagen o no carga). Tipos: bench, seat, cable, db, bar
+       ===================================================== */
+    const DIBUJOS = {
+      bench: '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><rect x="30" y="78" width="90" height="12" rx="4" fill="currentColor" opacity=".25"/><path d="M45 90v26M105 90v26M20 40h110"/><circle cx="20" cy="40" r="9"/><circle cx="130" cy="40" r="9"/><path d="M75 40v38"/></g></svg>',
+      seat:  '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><rect x="20" y="20" width="14" height="90" rx="4" fill="currentColor" opacity=".25"/><rect x="40" y="76" width="50" height="12" rx="4"/><path d="M60 88v24M110 30v82M110 50h-30M110 70h-30"/><circle cx="80" cy="50" r="5"/><circle cx="80" cy="70" r="5"/></g></svg>',
+      cable: '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M110 10v110M40 10h70"/><rect x="118" y="30" width="16" height="50" rx="3" fill="currentColor" opacity=".25"/><path d="M50 10v62M30 72h40"/><rect x="30" y="92" width="60" height="10" rx="4"/><path d="M45 102v14M75 102v14"/></g></svg>',
+      db:    '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M40 55h30M80 55h30"/><rect x="26" y="40" width="14" height="30" rx="3" fill="currentColor" opacity=".3"/><rect x="70" y="40" width="14" height="30" rx="3" fill="currentColor" opacity=".3"/><rect x="40" y="90" width="14" height="30" rx="3"/><path d="M47 105h40"/><rect x="87" y="90" width="14" height="30" rx="3"/></g></svg>',
+      bar:   '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M15 65h120"/><rect x="22" y="40" width="12" height="50" rx="3" fill="currentColor" opacity=".3"/><rect x="116" y="40" width="12" height="50" rx="3" fill="currentColor" opacity=".3"/><rect x="38" y="46" width="8" height="38" rx="3"/><rect x="104" y="46" width="8" height="38" rx="3"/></g></svg>'
+    };
+
+    /* =====================================================
+       FONDO DE LA PÁGINA
+       ► Para usar tu propia imagen, pon su ruta o URL aquí:
+             const FONDO_IMAGEN = 'imagenes/gimnasio.jpg';
+         Si lo dejas vacío se usa la imagen definida en el CSS
+         (--fondo-img). Ajusta FONDO_OPACIDAD (0 a 1).
+       ===================================================== */
+    const FONDO_IMAGEN = '';
+    const FONDO_OPACIDAD = 0.18;
+
+    if (FONDO_IMAGEN) {
+      const prueba = new Image();
+      prueba.onload = () => {
+        const r = document.documentElement.style;
+        r.setProperty('--fondo-img', `url("${FONDO_IMAGEN}")`);
+        r.setProperty('--fondo-size', 'cover');
+        r.setProperty('--fondo-repeat', 'no-repeat');
+        r.setProperty('--fondo-opacidad', FONDO_OPACIDAD);
+      };
+      prueba.src = FONDO_IMAGEN;
+    }
+
+    /* =====================================================
+       2) RUTINA
+       ► Para poner imagen, escribe su ruta o URL en  img:
+             img: 'imagenes/press-banca.jpg'
+             img: 'https://misitio.com/foto.jpg'
+         Si lo dejas vacío ('') se muestra el dibujo.
+       ===================================================== */
+        const RUTINA = [
+      /* ---------- LUNES ---------- */
+      {
+        dia: 'Lunes', titulo: 'Pecho y Tríceps',
+        ejercicios: [
+          {
+        nombre: 'Press banca con barra',
+        img: 'https://i.pinimg.com/originals/5d/52/bc/5d52bcd60a280ee85725fcfa2924b803.gif',
+        dibujo: 'bench',
+        musculo: 'Pecho, hombros, tríceps',
+        sirve: 'Principal ejercicio de fuerza para el pecho.',
+        series: '4 × 8-10',
+        pasos: [
+          'Acuéstate con los ojos bajo la barra.',
+          'Agarre más ancho que los hombros.',
+          'Baja hasta rozar el pecho y empuja.',
+        ]
+      },
+      {
+        nombre: 'Press inclinado con mancuernas',
+        img: 'https://i.pinimg.com/originals/76/34/7f/76347f216977f703a7c67d2a5ed04c72.gif',
+        dibujo: 'db',
+        musculo: 'Pecho superior',
+        sirve: 'Define la parte alta del pecho.',
+        series: '3 × 10',
+        pasos: [
+          'Banco a 30-45°.',
+          'Empuja las mancuernas hacia arriba.',
+          'Baja lento hasta el nivel del pecho.',
+        ]
+      },
+      {
+        nombre: 'Press de pecho en máquina',
+        img: 'https://api.smartworkout.app/asset/image/10a77040-fe68-475f-99c9-f02da0fe8d29',
+        dibujo: 'seat',
+        musculo: 'Pecho, hombros, tríceps',
+        sirve: 'Versión guiada del press: ideal para llegar al fallo con seguridad.',
+        series: '3 × 10-12',
+        pasos: [
+          'Ajusta el asiento: agarres a la altura del pecho.',
+          'Empuja al frente sin bloquear los codos.',
+          'Regresa lento hasta sentir estiramiento.',
+        ]
+      },
+      {
+        nombre: 'Press inclinado en máquina',
+        img: 'https://api.smartworkout.app/asset/image/6f764e6a-7c3e-4a27-a923-8f4d45b507a2',
+        dibujo: 'seat',
+        musculo: 'Pecho superior, hombros',
+        sirve: 'Trabaja la parte alta del pecho con movimiento guiado.',
+        series: '3 × 10-12',
+        pasos: [
+          'Ajusta el asiento: agarres a la altura del pecho alto.',
+          'Empuja hacia arriba y adelante.',
+          'Regresa lento sin soltar la tensión.',
+        ]
+      },
+      {
+        nombre: 'Aperturas en máquina (peck deck)',
+        img: 'https://api.smartworkout.app/asset/image/200b8ca4-2f89-47fc-89ce-98ed852b937a',
+        dibujo: 'seat',
+        musculo: 'Pecho',
+        sirve: 'Aísla y estira el pecho.',
+        series: '3 × 12',
+        pasos: [
+          'Espalda pegada, codos a la altura del pecho.',
+          'Junta los brazos al frente.',
+          'Regresa despacio sin soltar el peso.',
+        ]
+      },
+      {
+        nombre: 'Cruce de poleas',
+        img: 'https://api.smartworkout.app/asset/image/ec769207-2edf-4308-a50b-8294cea96b26',
+        dibujo: 'cable',
+        musculo: 'Pecho',
+        sirve: 'Marca el centro del pecho con tensión constante.',
+        series: '3 × 12-15',
+        pasos: [
+          'Un paso al frente, codos ligeramente flexionados.',
+          'Junta las manos frente al pecho.',
+          'Abre lento hasta sentir estiramiento.',
+        ]
+      },
+      {
+        nombre: 'Extensión de tríceps en polea',
+        img: 'https://api.smartworkout.app/asset/image/800c74bb-41a6-4401-a349-3ff73122160f',
+        dibujo: 'cable',
+        musculo: 'Tríceps',
+        sirve: 'Define la parte trasera del brazo.',
+        series: '3 × 12',
+        pasos: [
+          'Codos fijos a los costados.',
+          'Empuja la cuerda hacia abajo hasta estirar.',
+          'Sube controlado hasta 90°.',
+        ]
+      },
+      {
+        nombre: 'Fondos en máquina (press de tríceps)',
+        img: 'https://fitcron.com/wp-content/uploads/2021/03/18711301-Lever-Triceps-Dip-plate-loaded_Upper-Arms_720.gif',
+        dibujo: 'seat',
+        musculo: 'Tríceps, pecho inferior',
+        sirve: 'Trabaja el tríceps con carga ajustable y sin cargar tu peso.',
+        series: '3 × 10-12',
+        pasos: [
+          'Agarra las manijas con el torso erguido.',
+          'Empuja hacia abajo hasta extender los brazos.',
+          'Sube lento sin encoger los hombros.',
+        ]
+      }
+        ]
+      },
+
+      /* ---------- MARTES ---------- */
+      { dia: 'Martes', titulo: 'Descanso', descanso: true },
+
+      /* ---------- MIÉRCOLES ---------- */
+      {
+        dia: 'Miércoles', titulo: 'Espalda y Bíceps',
+        ejercicios: [
+          {
+        nombre: 'Jalón al pecho',
+        img: 'https://vitruve.fit/wp-content/uploads/2021/11/vitruvs3.gif',
+        dibujo: 'cable',
+        musculo: 'Dorsales, bíceps',
+        sirve: 'Ensancha la espalda.',
+        series: '4 × 10',
+        pasos: [
+          'Agarre ancho, pecho arriba.',
+          'Jala la barra hasta la parte alta del pecho.',
+          'Sube lento sin soltar.',
+        ]
+      },
+      {
+        nombre: 'Remo sentado en polea',
+        img: 'https://api.smartworkout.app/asset/image/dec428b4-8d5d-4c86-9225-9992cb5caa48',
+        dibujo: 'cable',
+        musculo: 'Espalda media',
+        sirve: 'Da grosor a la espalda y mejora la postura.',
+        series: '3 × 12',
+        pasos: [
+          'Espalda recta, rodillas flexionadas.',
+          'Jala el agarre al abdomen.',
+          'Junta los omoplatos 1 segundo.',
+        ]
+      },
+      {
+        nombre: 'Remo en máquina con apoyo de pecho',
+        img: 'https://api.smartworkout.app/asset/image/c664f814-e64d-4879-a0f3-ded8baa61fc9',
+        dibujo: 'seat',
+        musculo: 'Espalda media, dorsales',
+        sirve: 'El apoyo en el pecho evita usar la zona lumbar y aísla la espalda.',
+        series: '3 × 10-12',
+        pasos: [
+          'Pecho pegado al soporte, agarre firme.',
+          'Jala los codos hacia atrás.',
+          'Aprieta la espalda y regresa lento.',
+        ]
+      },
+      {
+        nombre: 'Pullover en máquina',
+        img: 'https://lightinfitness.com/wp-content/uploads/2024/03/comment-realiser-un-pull-over-assis-a-la-machine-guide-complet.jpg',
+        dibujo: 'seat',
+        musculo: 'Dorsales',
+        sirve: 'Aísla los dorsales sin que los bíceps tomen el trabajo.',
+        series: '3 × 12',
+        pasos: [
+          'Codos sobre las almohadillas.',
+          'Lleva los brazos hacia abajo y adelante.',
+          'Sube despacio sintiendo el estiramiento.',
+        ]
+      },
+      {
+        nombre: 'Remo alto en máquina',
+        img: 'https://api.smartworkout.app/asset/image/00aa6f41-0b48-4877-9b81-a068bd0e5823',
+        dibujo: 'seat',
+        musculo: 'Espalda alta, deltoides posteriores',
+        sirve: 'Ensancha y engrosa la parte alta de la espalda.',
+        series: '3 × 10-12',
+        pasos: [
+          'Pecho contra el soporte, agarre firme.',
+          'Jala los codos atrás y arriba.',
+          'Aprieta omoplatos y regresa lento.',
+        ]
+      },
+      {
+        nombre: 'Extensión lumbar en máquina',
+        img: 'https://api.smartworkout.app/asset/image/fd7b01e0-a702-4e0b-8cbf-066bb73e18e0',
+        dibujo: 'seat',
+        musculo: 'Zona lumbar, glúteos',
+        sirve: 'Fortalece la espalda baja y protege la columna.',
+        series: '3 × 12-15',
+        pasos: [
+          'Cadera ajustada al asiento, almohadilla en la espalda.',
+          'Extiende el torso hasta alinearlo, sin arquear de más.',
+          'Regresa despacio.',
+        ]
+      },
+      {
+        nombre: 'Curl de bíceps con barra',
+        img: 'https://fitcron.com/wp-content/uploads/2021/04/00311301-Barbell-Curl_Upper-Arms_720.gif',
+        dibujo: 'bar',
+        musculo: 'Bíceps',
+        sirve: 'Aumenta fuerza y tamaño del brazo.',
+        series: '3 × 10-12',
+        pasos: [
+          'De pie, palmas arriba, codos pegados.',
+          'Sube la barra al pecho.',
+          'Baja lento sin balancear.',
+        ]
+      },
+      {
+        nombre: 'Curl predicador en máquina',
+        img: 'https://api.smartworkout.app/asset/image/fe056dae-f58f-4653-be66-d68d628f1bf5',
+        dibujo: 'seat',
+        musculo: 'Bíceps',
+        sirve: 'Evita el balanceo y aísla el bíceps.',
+        series: '3 × 10-12',
+        pasos: [
+          'Axilas apoyadas en el borde del soporte.',
+          'Flexiona los codos hasta subir las manijas.',
+          'Baja controlado sin soltar la tensión.',
+        ]
+      },
+      {
+        nombre: 'Curl de bíceps en polea baja',
+        img: 'https://api.smartworkout.app/asset/image/a6332173-ad96-4f7f-b5f3-c854695c2cdc',
+        dibujo: 'cable',
+        musculo: 'Bíceps',
+        sirve: 'Tensión continua en todo el recorrido del bíceps.',
+        series: '3 × 12',
+        pasos: [
+          'De pie frente a la polea, codos pegados.',
+          'Sube la barra o cuerda al pecho.',
+          'Baja controlado sin balancear.',
+        ]
+      },
+      {
+        nombre: 'Curl martillo con mancuernas',
+        img: 'https://api.smartworkout.app/asset/image/3b047fe7-a0a3-4080-aeec-acb472b7a6a1',
+        dibujo: 'db',
+        musculo: 'Bíceps y antebrazo',
+        sirve: 'Trabaja el brazo y el agarre.',
+        series: '3 × 12',
+        pasos: [
+          'Mancuernas con palmas enfrentadas.',
+          'Sube sin mover los codos.',
+          'Baja con control.',
+        ]
+      }
+        ]
+      },
+
+      /* ---------- JUEVES ---------- */
+      { dia: 'Jueves', titulo: 'Descanso', descanso: true },
+
+      /* ---------- VIERNES ---------- */
+      {
+        dia: 'Viernes', titulo: 'Piernas',
+        ejercicios: [
+          {
+        nombre: 'Prensa de piernas',
+        img: 'https://fitcron.com/wp-content/uploads/2021/04/07401301-Sled-45%C2%B0-Leg-Wide-Press_Thighs_720.gif',
+        dibujo: 'seat',
+        musculo: 'Cuádriceps y glúteos',
+        sirve: 'Trabaja toda la pierna con poco riesgo para la espalda.',
+        series: '4 × 12',
+        pasos: [
+          'Espalda pegada, pies al ancho de hombros.',
+          'Empuja sin bloquear las rodillas.',
+          'Baja hasta unos 90°.',
+        ]
+      },
+      {
+        nombre: 'Sentadilla hack en máquina',
+        img: 'https://api.smartworkout.app/asset/image/d6efe1f4-02e3-45bb-86f3-6c87e862509f',
+        dibujo: 'seat',
+        musculo: 'Cuádriceps, glúteos',
+        sirve: 'Sentadilla guiada que carga mucho el cuádriceps con estabilidad.',
+        series: '3 × 10-12',
+        pasos: [
+          'Espalda y hombros apoyados, pies al ancho de hombros.',
+          'Baja controlado hasta unos 90°.',
+          'Empuja con todo el pie sin bloquear rodillas.',
+        ]
+      },
+      {
+        nombre: 'Extensión de cuádriceps',
+        img: 'https://boxlifemagazine.com/wp-content/uploads//2023/07/leg-extension-exercice-musculation-min.gif',
+        dibujo: 'seat',
+        musculo: 'Cuádriceps',
+        sirve: 'Define el frente del muslo.',
+        series: '3 × 12-15',
+        pasos: [
+          'Rodillos sobre los tobillos.',
+          'Estira las piernas arriba.',
+          'Baja despacio.',
+        ]
+      },
+      {
+        nombre: 'Sentadilla en máquina Smith',
+        img: 'https://api.smartworkout.app/asset/image/92f7dd14-aef1-4f71-aa74-4057ee0d4d30',
+        dibujo: 'bar',
+        musculo: 'Cuádriceps, glúteos',
+        sirve: 'Sentadilla guiada, buena para aprender la técnica con seguridad.',
+        series: '3 × 10',
+        pasos: [
+          'Pies un poco adelante de la barra, espalda recta.',
+          'Baja hasta que el muslo quede paralelo al suelo.',
+          'Empuja con los talones sin bloquear las rodillas.',
+        ]
+      },
+      {
+        nombre: 'Curl femoral en máquina',
+        img: 'https://fitcron.com/wp-content/uploads/2021/04/05861301-Lever-Lying-Leg-Curl_Thighs_720.gif',
+        dibujo: 'seat',
+        musculo: 'Femorales',
+        sirve: 'Fortalece la parte trasera del muslo.',
+        series: '3 × 12',
+        pasos: [
+          'Rodillos sobre los talones.',
+          'Flexiona llevando talones hacia los glúteos.',
+          'Regresa lento.',
+        ]
+      },
+      {
+        nombre: 'Curl femoral sentado',
+        img: 'https://i.pinimg.com/originals/f2/a3/51/f2a3514efd81bfdf908462168b0f8b8f.gif',
+        dibujo: 'seat',
+        musculo: 'Femorales',
+        sirve: 'Aísla los femorales con la cadera flexionada.',
+        series: '3 × 12',
+        pasos: [
+          'Rodillo sobre los tobillos, muslos fijos.',
+          'Flexiona las rodillas llevando los talones abajo.',
+          'Sube despacio.',
+        ]
+      },
+      {
+        nombre: 'Máquina de abductores',
+        img: 'https://i.pinimg.com/originals/f2/a3/51/f2a3514efd81bfdf908462168b0f8b8f.gif',
+        dibujo: 'seat',
+        musculo: 'Glúteo medio, abductores',
+        sirve: 'Fortalece el lateral de la cadera y estabiliza la rodilla.',
+        series: '3 × 12-15',
+        pasos: [
+          'Espalda pegada, almohadillas por fuera de las rodillas.',
+          'Abre las piernas sin dar tirones.',
+          'Cierra lento.',
+        ]
+      },
+      {
+        nombre: 'Máquina de aductores',
+        img: 'https://i.pinimg.com/originals/f2/a3/51/f2a3514efd81bfdf908462168b0f8b8f.gif',
+        dibujo: 'seat',
+        musculo: 'Aductores (muslo interno)',
+        sirve: 'Fortalece el interior del muslo y estabiliza la cadera.',
+        series: '3 × 12-15',
+        pasos: [
+          'Espalda pegada, almohadillas en la cara interna de las rodillas.',
+          'Junta las piernas sin dar tirones.',
+          'Abre despacio.',
+        ]
+      },
+      {
+        nombre: 'Elevación de talones sentado en máquina',
+        img: 'https://api.smartworkout.app/asset/image/012a33a2-15d2-4d70-a84c-46efaef85c7d',
+        dibujo: 'seat',
+        musculo: 'Sóleo (pantorrilla profunda)',
+        sirve: 'Complementa la elevación de pie trabajando otra parte de la pantorrilla.',
+        series: '3 × 15',
+        pasos: [
+          'Rodillas bajo la almohadilla, puntas en la plataforma.',
+          'Sube lo más alto posible.',
+          'Baja estirando el talón.',
+        ]
+      },
+      {
+        nombre: 'Elevación de talones',
+        img: 'https://api.smartworkout.app/asset/image/26d66319-8ed6-4963-b73b-4175a8db6ea5',
+        dibujo: 'seat',
+        musculo: 'Pantorrillas',
+        sirve: 'Fortalece y define las pantorrillas.',
+        series: '3 × 15',
+        pasos: [
+          'Puntas de los pies en la plataforma.',
+          'Sube lo más alto que puedas.',
+          'Baja estirando el talón.',
+        ]
+      }
+        ]
+      },
+
+      /* ---------- SÁBADO ---------- */
+      {
+        dia: 'Sábado', titulo: 'Hombros, Glúteos y Core',
+        ejercicios: [
+          {
+        nombre: 'Press militar con mancuernas',
+        img: 'https://fitcron.com/wp-content/uploads/2021/04/42371301-Dumbbell-Seated-Close-Grip-Press_Shoulders_720.gif',
+        dibujo: 'db',
+        musculo: 'Hombros, tríceps',
+        sirve: 'Construye hombros fuertes.',
+        series: '3 × 10',
+        pasos: [
+          'Sentado, mancuernas a la altura de las orejas.',
+          'Empuja hacia arriba sin arquear la espalda.',
+          'Baja controlado.',
+        ]
+      },
+      {
+        nombre: 'Press de hombros en máquina',
+        img: 'https://api.smartworkout.app/asset/image/396c5098-22d4-4229-9fa4-054515ea9824',
+        dibujo: 'seat',
+        musculo: 'Hombros, tríceps',
+        sirve: 'Press guiado para cargar más peso con seguridad.',
+        series: '3 × 10-12',
+        pasos: [
+          'Asiento a la altura de los hombros.',
+          'Empuja hacia arriba sin arquear la espalda.',
+          'Baja controlado.',
+        ]
+      },
+      {
+        nombre: 'Elevaciones laterales',
+        img: 'https://image.tuasaude.com/media/article/nj/tp/elevacao-lateral_75627.gif?width=686&height=487',
+        dibujo: 'db',
+        musculo: 'Deltoides laterales',
+        sirve: 'Da amplitud al hombro.',
+        series: '3 × 12-15',
+        pasos: [
+          'Peso ligero, codos semiflexionados.',
+          'Sube hasta la altura del hombro.',
+          'Baja lento sin balancear.',
+        ]
+      },
+      {
+        nombre: 'Elevaciones laterales en máquina',
+        img: 'https://fitcron.com/wp-content/uploads/2021/04/33431301-Lever-Lateral-Raise-VERSION-2_Shoulders_720.gif',
+        dibujo: 'seat',
+        musculo: 'Deltoides laterales',
+        sirve: 'Tensión constante en el hombro durante todo el recorrido.',
+        series: '3 × 12-15',
+        pasos: [
+          'Codos bajo las almohadillas, espalda pegada.',
+          'Abre los brazos hasta la altura del hombro.',
+          'Baja lento sin soltar el peso.',
+        ]
+      },
+      {
+        nombre: 'Pájaros en máquina (peck deck inverso)',
+        img: '',
+        dibujo: 'seat',
+        musculo: 'Deltoides posteriores, espalda alta',
+        sirve: 'Fortalece la parte trasera del hombro y mejora la postura.',
+        series: '3 × 12-15',
+        pasos: [
+          'Pecho contra el respaldo, brazos al frente.',
+          'Abre los brazos hacia atrás.',
+          'Regresa despacio.',
+        ]
+      },
+      {
+        nombre: 'Encogimientos en máquina (trapecio)',
+        img: 'https://fitcron.com/wp-content/uploads/2021/04/06041301-Lever-Shrug-plate-loaded_Back_720.gif',
+        dibujo: 'seat',
+        musculo: 'Trapecio',
+        sirve: 'Fortalece el cuello-hombros y mejora la postura.',
+        series: '3 × 12-15',
+        pasos: [
+          'Agarres a los lados, brazos estirados.',
+          'Sube los hombros hacia las orejas.',
+          'Baja lento, sin rotar los hombros.',
+        ]
+      },
+      {
+        nombre: 'Hip thrust con barra',
+        img: 'https://fitcron.com/wp-content/uploads/2021/04/29641301-Barbell-Glute-Bridge-hands-on-bar_Hips_720.gif',
+        dibujo: 'bench',
+        musculo: 'Glúteos y femorales',
+        sirve: 'Potencia glúteos y cadera.',
+        series: '4 × 10-12',
+        pasos: [
+          'Espalda alta apoyada en el banco.',
+          'Empuja la cadera hasta alinear el cuerpo.',
+          'Aprieta glúteos 1 segundo.',
+        ]
+      },
+      {
+        nombre: 'Patada de glúteo en máquina',
+        img: 'https://api.smartworkout.app/asset/image/51899e95-660f-44d9-b2ac-754dae5efef1',
+        dibujo: 'seat',
+        musculo: 'Glúteos',
+        sirve: 'Aísla el glúteo con carga constante.',
+        series: '3 × 12 por pierna',
+        pasos: [
+          'Apoya el pecho y coloca el pie en la plataforma.',
+          'Empuja hacia atrás hasta extender la cadera.',
+          'Regresa lento sin arquear la espalda.',
+        ]
+      },
+      {
+        nombre: 'Crunch abdominal en polea',
+        img: 'https://api.smartworkout.app/asset/image/94da474a-11ef-4076-b8cb-5c45f5c22de7',
+        dibujo: 'cable',
+        musculo: 'Abdomen',
+        sirve: 'Fortalece el abdomen.',
+        series: '3 × 15',
+        pasos: [
+          'Arrodillado, cuerda junto a la cabeza.',
+          'Enrolla el torso hacia las rodillas.',
+          'Sube lento.',
+        ]
+      },
+      {
+        nombre: 'Rotación de torso en máquina',
+        img: 'https://api.smartworkout.app/asset/image/6933ed3b-6f76-4a44-8e34-bd0ec3128ad5',
+        dibujo: 'seat',
+        musculo: 'Oblicuos',
+        sirve: 'Trabaja los costados del abdomen y el core.',
+        series: '3 × 12 por lado',
+        pasos: [
+          'Pelvis fija, brazos en las almohadillas.',
+          'Gira el torso sin mover la cadera.',
+          'Regresa controlado y cambia de lado.',
+        ]
+      },
+      {
+        nombre: 'Abdominales en máquina',
+        img: 'https://api.smartworkout.app/asset/image/5b925c91-2987-4f82-bf33-6e722c59625e',
+        dibujo: 'seat',
+        musculo: 'Abdomen',
+        sirve: 'Crunch con carga ajustable y movimiento guiado.',
+        series: '3 × 15',
+        pasos: [
+          'Agarra las manijas, pies bajo los rodillos.',
+          'Flexiona el torso hacia adelante.',
+          'Regresa controlado sin soltar el abdomen.',
+        ]
+      }
+        ]
+      },
+
+      /* ---------- DOMINGO ---------- */
+      { dia: 'Domingo', titulo: 'Descanso', descanso: true }
+    ];
+
+    /* =====================================================
+       3) CÓDIGO DE LA PÁGINA (no necesitas tocar esto)
+       ===================================================== */
+    const nav  = document.getElementById('nav');
+    const main = document.getElementById('main');
+    let modo = 'dia';
+    let diaActual = 0;
+
+    /* =====================================================
+       NIVELES DE ENTRENAMIENTO
+       ► El campo  series  de cada ejercicio es el del nivel
+         INTERMEDIO. Principiante y Avanzado se calculan solos
+         con las reglas de abajo (series y repeticiones).
+       ===================================================== */
+    const NIVELES = {
+      principiante: {
+        icono: '🟢', nombre: 'Principiante', para: 'Menos de 6 meses entrenando',
+        series: 'una serie menos por ejercicio (mínimo 2)',
+        descanso: '60-90 s',
+        intensidad: 'Peso ligero: deja 3-4 repeticiones en reserva.',
+        consejo: 'Aprende la técnica antes de subir peso. Sube la carga solo cuando completes todas las repeticiones con buena forma.',
+        delta: -1
+      },
+      intermedio: {
+        icono: '🟡', nombre: 'Intermedio', para: '6 meses a 2 años entrenando',
+        series: 'las indicadas en cada ejercicio',
+        descanso: '60-90 s',
+        intensidad: 'Peso moderado: deja 1-2 repeticiones en reserva.',
+        consejo: 'Sobrecarga progresiva: cuando llegues al máximo de repeticiones en todas las series, sube un poco el peso.',
+        delta: 0
+      },
+      avanzado: {
+        icono: '🔴', nombre: 'Avanzado', para: 'Más de 2 años entrenando',
+        series: 'una serie más por ejercicio (máximo 5)',
+        descanso: '90-120 s',
+        intensidad: 'Peso pesado: llega a 0-1 repeticiones en reserva en la última serie.',
+        consejo: 'Exige más recuperación: duerme bien, come suficiente proteína y baja el peso una semana cada 6-8 semanas.',
+        delta: 1
+      }
+    };
+
+    /* Repeticiones por nivel, según las del nivel intermedio */
+    const REPS = {
+      principiante: { '8-10': '10-12', '10': '12', '10-12': '12-15', '12': '12', '12-15': '15', '15': '15' },
+      avanzado:     { '8-10': '6-8',   '10': '8',  '10-12': '8-10',  '12': '10', '12-15': '10-12', '15': '12-15' }
+    };
+
+    let nivel = 'intermedio';
+    try {
+      const guardado = localStorage.getItem('nivelGym');
+      if (NIVELES[guardado]) nivel = guardado;
+    } catch (e) {}
+
+    // "4 × 8-10" (intermedio) → series y repeticiones del nivel elegido
+    function seriesNivel(texto) {
+      const m = texto.match(/^(\d+) × ([\d-]+)(.*)$/);
+      if (!m || nivel === 'intermedio') return texto;
+      const series = Math.min(5, Math.max(2, +m[1] + NIVELES[nivel].delta));
+      const reps = REPS[nivel][m[2]] || m[2];
+      return `${series} × ${reps}${m[3]}`;
+    }
+
+    function renderNivel() {
+      const n = NIVELES[nivel];
+      [...document.getElementById('levels').children]
+        .forEach(b => b.classList.toggle('on', b.dataset.nivel === nivel));
+      document.getElementById('nivelInfo').innerHTML = `
+        <div class="nivel-card">
+          <h3>${n.icono} ${n.nombre} <small>· ${n.para}</small></h3>
+          <span class="tag">Series: ${n.series}</span>
+          <span class="tag">Descanso entre series: ${n.descanso}</span>
+          <p><b>Intensidad:</b> ${n.intensidad}</p>
+          <p><b>Consejo:</b> ${n.consejo}</p>
+        </div>`;
+    }
+
+    function htmlImagen(ej) {
+      const dibujo = DIBUJOS[ej.dibujo] || '';
+      if (!ej.img) return dibujo;
+      const respaldo = dibujo.replace(/"/g, '&quot;');
+      return `<img src="${ej.img}" alt="${ej.nombre}" loading="lazy" onerror="this.outerHTML='${respaldo}'">`;
+    }
+
+    function htmlEjercicio(ej) {
+      return `
+        <div class="ex">
+          <div class="pic">${htmlImagen(ej)}</div>
+          <div>
+            <h3>${ej.nombre}</h3>
+            <span class="tag">${ej.musculo}</span>
+            <span class="tag">${seriesNivel(ej.series)}</span>
+            <p><b>¿Para qué sirve?</b> ${ej.sirve}</p>
+            <p><b>Cómo se usa:</b></p>
+            <ol>${ej.pasos.map(p => `<li>${p}</li>`).join('')}</ol>
+          </div>
+        </div>`;
+    }
+
+    /* Imagen del día de descanso. Pon aquí tu ruta o URL; si la dejas vacía
+       (o no carga) se muestra una ilustración de luna y estrellas. */
+    const IMG_DESCANSO = '';
+
+    const DIBUJO_DESCANSO =
+      '<svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMid slice">' +
+      '<g fill="#fff">' +
+      '<circle cx="60" cy="40" r="2.5" opacity=".8"/><circle cx="130" cy="95" r="2" opacity=".6"/>' +
+      '<circle cx="320" cy="35" r="2.5" opacity=".8"/><circle cx="360" cy="110" r="2" opacity=".6"/>' +
+      '<circle cx="250" cy="60" r="1.8" opacity=".7"/><circle cx="90" cy="150" r="1.8" opacity=".5"/></g>' +
+      '<path d="M215 40a55 55 0 1 0 55 75A62 62 0 0 1 215 40z" fill="#ffe7a8"/>' +
+      '<text x="285" y="70" font-size="26" fill="#fff" opacity=".9" font-weight="700">z</text>' +
+      '<text x="308" y="52" font-size="20" fill="#fff" opacity=".7" font-weight="700">z</text>' +
+      '<text x="326" y="38" font-size="15" fill="#fff" opacity=".5" font-weight="700">z</text>' +
+      '</svg>';
+
+    function htmlImagenDescanso() {
+      if (!IMG_DESCANSO) return DIBUJO_DESCANSO;
+      const respaldo = DIBUJO_DESCANSO.replace(/"/g, '&quot;');
+      return `<img src="${IMG_DESCANSO}" alt="Día de descanso" loading="lazy" onerror="this.outerHTML='${respaldo}'">`;
+    }
+
+    function htmlDescanso() {
+      return `
+        <div class="rest">
+          <div class="rest-hero">${htmlImagenDescanso()}</div>
+          <div class="rest-body">
+            <h3>Día de descanso</h3>
+            <p>Tus músculos crecen mientras descansas. Recupérate para rendir mejor.</p>
+            <div class="rest-tips">
+              <div class="tip"><span class="ic">😴</span><div><b>Duerme</b><span>7-9 horas</span></div></div>
+              <div class="tip"><span class="ic">💧</span><div><b>Hidrátate</b><span>Agua durante todo el día</span></div></div>
+              <div class="tip"><span class="ic">🥗</span><div><b>Come bien</b><span>Proteína y verduras</span></div></div>
+              <div class="tip"><span class="ic">🚶</span><div><b>Camina</b><span>20-30 min suaves</span></div></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function htmlDia(d) {
+      const cuerpo = d.descanso ? htmlDescanso() : d.ejercicios.map(htmlEjercicio).join('');
+      return `<h2>${d.dia} · ${d.titulo}</h2>${cuerpo}`;
+    }
+
+    function dibujar() {
+      renderNivel();
+      document.getElementById('btnDia').classList.toggle('on', modo === 'dia');
+      document.getElementById('btnSemana').classList.toggle('on', modo === 'semana');
+      nav.style.display = modo === 'dia' ? 'flex' : 'none';
+      [...nav.children].forEach((b, i) => b.classList.toggle('on', i === diaActual));
+      main.innerHTML = modo === 'dia' ? htmlDia(RUTINA[diaActual]) : RUTINA.map(htmlDia).join('');
+    }
+
+    RUTINA.forEach((d, i) => {
+      const b = document.createElement('button');
+      b.textContent = d.dia;
+      if (d.descanso) b.className = 'rest-day';
+      b.onclick = () => { diaActual = i; dibujar(); };
+      nav.appendChild(b);
+    });
+
+    document.getElementById('btnDia').onclick    = () => { modo = 'dia';    dibujar(); };
+    document.getElementById('btnSemana').onclick = () => { modo = 'semana'; dibujar(); };
+
+    Object.keys(NIVELES).forEach(k => {
+      const b = document.createElement('button');
+      b.dataset.nivel = k;
+      b.textContent = NIVELES[k].icono + ' ' + NIVELES[k].nombre;
+      b.onclick = () => {
+        nivel = k;
+        try { localStorage.setItem('nivelGym', k); } catch (e) {}
+        dibujar();
+      };
+      document.getElementById('levels').appendChild(b);
+    });
+
+    dibujar();
+  </script>
+</body>
+</html>
